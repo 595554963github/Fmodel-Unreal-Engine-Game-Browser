@@ -1,0 +1,133 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
+using Newtonsoft.Json;
+using Serilog;
+
+namespace CUE4Parse.UE4.Assets.Exports.Rig;
+
+public class UDNAAsset : UObject
+{
+    public DNAVersion Version { get; set; } = null!;
+    public SectionLookupTable Sections { get; set; } = null!;
+    public RawDescriptor Descriptor { get; set; } = null!;
+    public RawDefinition Definition { get; set; } = null!;
+    public RawBehavior Behavior { get; set; } = null!;
+    public RawGeometry Geometry { get; set; } = null!;
+    public DNAVersion LayerVersion { get; set; } = null!;
+    public IndexTable IndexTable { get; set; } = null!;
+    public Dictionary<string, IRawBase> Layers { get; set; } = null!;
+
+    private readonly byte[] _signature = "DNA"u8.ToArray();
+    private readonly byte[] _eof = "AND"u8.ToArray();
+
+    public override void Deserialize(FAssetArchive Ar, long validPos)
+    {
+        base.Deserialize(Ar, validPos);
+
+        if (FDNAAssetCustomVersion.Get(Ar) > FDNAAssetCustomVersion.Type.BeforeCustomVersionWasAdded)
+        {
+            var startPos = Ar.Position;
+            var endianAr = new FArchiveBigEndian(Ar);
+
+            var signature = endianAr.ReadBytes(3);
+            if (!signature.SequenceEqual(_signature))
+                throw new InvalidDataException("文件起始签名无效");
+
+            Version = new DNAVersion(endianAr);
+            Sections = new SectionLookupTable(endianAr);
+
+            endianAr.Position = startPos + Sections.Descriptor;
+            Descriptor = new RawDescriptor(endianAr);
+
+            endianAr.Position = startPos + Sections.Definition;
+            Definition = new RawDefinition(endianAr);
+
+            endianAr.Position = startPos + Sections.Behaviour;
+            Behavior = new RawBehavior(endianAr, Sections, startPos);
+
+            endianAr.Position = startPos + Sections.Geometry;
+            Geometry = new RawGeometry(endianAr);
+
+            var eof = endianAr.ReadBytes(3);
+            if (!eof.SequenceEqual(_eof))
+                throw new InvalidDataException("文件结束签名无效");
+
+            startPos = endianAr.Position;
+
+            signature = endianAr.ReadBytes(3);
+            if (!signature.SequenceEqual(_signature))
+                throw new InvalidDataException("层起始签名无效");
+
+            LayerVersion = new DNAVersion(endianAr);
+            IndexTable = new IndexTable(endianAr);
+
+            Layers = new Dictionary<string, IRawBase>();
+            foreach (var entry in IndexTable.Entries)
+            {
+                endianAr.Position = startPos + entry.Offset;
+                var layerStartPos = endianAr.Position;
+
+                Layers[entry.Id] = entry.Id switch
+                {
+                    "desc" => new RawDescriptor(endianAr),
+                    "defn" => new RawDefinition(endianAr),
+                    "bhvr" => new RawBehavior(endianAr),
+                    "geom" => new RawGeometry(endianAr),
+                    "mlbh" => new RawMachineLearnedBehavior(endianAr),
+                    "rbfb" => new RawRBFBehavior(endianAr),
+                    "rbfe" => new RawRBFBehaviorExt(endianAr),
+                    "jbmd" => new RawJointBehaviorMetadata(endianAr),
+                    "twsw" => new RawTwistSwingBehavior(endianAr),
+                    _ => throw new NotSupportedException($"当前不支持类型 '{entry.Id}'")
+                };
+
+                var readSize = endianAr.Position - layerStartPos;
+                var remaining = entry.Size - readSize;
+
+                switch (remaining)
+                {
+                    case > 0:
+                        Log.Debug("未能正确读取层'{0}',还剩余{1}字节", entry.Id, remaining);
+                        break;
+                    case < 0:
+                        Log.Debug("未能正确读取层'{0}',多读取了{1}字节", entry.Id, Math.Abs(remaining));
+                        break;
+                }
+            }
+        }
+    }
+
+    protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+    {
+        base.WriteJson(writer, serializer);
+
+        writer.WritePropertyName("Version");
+        serializer.Serialize(writer, Version);
+
+        writer.WritePropertyName("Descriptor");
+        serializer.Serialize(writer, Descriptor);
+
+        writer.WritePropertyName("Definition");
+        serializer.Serialize(writer, Definition);
+
+        writer.WritePropertyName("Behavior");
+        serializer.Serialize(writer, Behavior);
+
+        writer.WritePropertyName("Geometry");
+        serializer.Serialize(writer, Geometry);
+
+        writer.WritePropertyName("LayerVersion");
+        serializer.Serialize(writer, LayerVersion);
+
+        writer.WritePropertyName("IndexTable");
+        serializer.Serialize(writer, IndexTable);
+
+        writer.WritePropertyName("Layers");
+        serializer.Serialize(writer, Layers);
+    }
+}

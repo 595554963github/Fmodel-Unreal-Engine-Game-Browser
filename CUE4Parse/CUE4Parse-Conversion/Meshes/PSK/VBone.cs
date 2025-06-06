@@ -1,0 +1,32 @@
+﻿using CUE4Parse.UE4.Writers;
+using CUE4Parse_Conversion.ActorX;
+
+namespace CUE4Parse_Conversion.Meshes.PSK
+{
+    public class VBone
+    {
+        public string Name;
+        public uint Flags;
+        public int NumChildren;
+        public int ParentIndex;
+        public VJointPosPsk BonePos;
+
+        public VBone()
+        {
+            Name = string.Empty;
+            Flags = 0;
+            NumChildren = 0;
+            ParentIndex = -1; 
+            BonePos = new VJointPosPsk();
+        }
+
+        public void Serialize(FArchiveWriter Ar)
+        {
+            Ar.Write(Name, 64);
+            Ar.Write(Flags);
+            Ar.Write(NumChildren);
+            Ar.Write(ParentIndex);
+            BonePos.Serialize(Ar);
+        }
+    }
+}

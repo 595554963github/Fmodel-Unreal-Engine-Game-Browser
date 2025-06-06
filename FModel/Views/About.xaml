@@ -1,0 +1,50 @@
+<adonisControls:AdonisWindow x:Class="FModel.Views.About"
+                             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                             xmlns:local="clr-namespace:FModel"
+                             xmlns:adonisControls="clr-namespace:AdonisUI.Controls;assembly=AdonisUI"
+                             WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
+                             IconVisibility="Collapsed" Width="524" SizeToContent="Height"
+                             Loaded="OnLoaded" Title="关于" Height="497">
+    <adonisControls:AdonisWindow.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources/Resources.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </adonisControls:AdonisWindow.Resources>
+    <StackPanel Margin="30,10,26,10">
+        <StackPanel HorizontalAlignment="Center" Margin="0,0,0,30" Width="476">
+            <TextBlock Text="{Binding Source={x:Static local:Constants.APP_VERSION}, StringFormat={}FModel {0}}" 
+                       FontSize="15" FontWeight="Medium" Foreground="#9DA3DD" 
+                       HorizontalAlignment="Center"/>
+            <TextBlock Text="  由4sval创作, 由偷吃布丁的涅普缇努汉化,并集成了万能二进制提取器、万能字节移除器和超级工具箱" 
+                       FontSize="10" FontWeight="Bold" 
+                       HorizontalAlignment="Center" Margin="5 0" Width="463" Height="27" Foreground="#FF21F503"/>
+        </StackPanel>
+
+        <StackPanel HorizontalAlignment="Center">
+            <TextBlock Text="注释" FontSize="15" FontWeight="Bold" Foreground="#9DA3DD" />
+            <Line X1="0" Y1="0" X2="100" Y2="0" Stroke="#9DA3DD" StrokeThickness="2" Margin="0,5,0,5" />
+        </StackPanel>
+        <TextBlock FontSize="12" Foreground="#727272" TextWrapping="Wrap" Margin="0,0,0,30" Text="{Binding DescriptionLabel}" />
+
+        <StackPanel HorizontalAlignment="Center">
+            <TextBlock Text="贡献者" FontSize="15" FontWeight="Bold" Foreground="#9DA3DD" />
+            <Line X1="0" Y1="0" X2="100" Y2="0" Stroke="#9DA3DD" StrokeThickness="2" Margin="0,5,0,5" />
+        </StackPanel>
+        <TextBlock FontSize="12" Foreground="#727272" TextWrapping="Wrap" Margin="0,0,0,30" Text="{Binding ContributorsLabel}" />
+
+        <StackPanel HorizontalAlignment="Center">
+            <TextBlock Text="捐赠者" FontSize="15" FontWeight="Bold" Foreground="#9DA3DD" />
+            <Line X1="0" Y1="0" X2="100" Y2="0" Stroke="#9DA3DD" StrokeThickness="2" Margin="0,5,0,5" />
+        </StackPanel>
+        <TextBlock FontSize="12" Foreground="#727272" TextWrapping="Wrap" Margin="0,0,0,30" Text="{Binding DonatorsLabel}" />
+
+        <StackPanel HorizontalAlignment="Center">
+            <TextBlock Text="提供技术支持" FontSize="15" FontWeight="Bold" Foreground="#9DA3DD" />
+            <Line X1="0" Y1="0" X2="100" Y2="0" Stroke="#9DA3DD" StrokeThickness="2" Margin="0,5,0,5" />
+        </StackPanel>
+        <TextBlock FontSize="12" Foreground="#727272" TextWrapping="Wrap" Margin="0,0,0,30" Text="{Binding ReferencesLabel}" />
+    </StackPanel>
+</adonisControls:AdonisWindow>
